@@ -1,26 +1,26 @@
 ticker,long_name,history_years,aum_millions,avg_daily_volume,completeness_pct,is_leveraged,is_etn,pass_history,pass_aum,pass_volume,pass_leverage,pass_completeness,PASSES_ALL
-AGG,iShares Trust: iShares Core US Aggregate Bond ETF,21.3,138698.2,,85.1,False,False,True,True,True,True,False,False
-BKLN,Invesco Exchange-Traded Fund Trust II: Invesco Senior Loan ETF,13.8,6260.3,,55.4,False,False,True,True,True,True,False,False
-BND,Vanguard Bond Index Funds: Vanguard Total Bond Market Index Fund; ETF Shares,17.7,151563.1,,71.0,False,False,True,True,True,True,False,False
-EFA,iShares Trust: iShares MSCI EAFE ETF,23.4,71451.2,,93.5,False,False,True,True,True,True,False,False
-EMLC,VanEck ETF Trust: VanEck JP Morgan EM Local Currency Bond ETF,14.4,4748.5,,57.8,False,False,True,True,True,True,False,False
-GLD,SPDR Gold Trust: SPDR Gold Shares,20.1,155110.8,,80.5,False,False,True,True,True,True,False,False
-IVV,iShares Trust: iShares Core S&P 500 ETF,24.6,720543.4,,98.5,False,False,True,True,True,True,True,True
-IWM,iShares Trust: iShares Russell 2000 ETF,24.6,71915.6,,98.4,False,False,True,True,True,True,True,True
-LQD,iShares Trust: iShares iBoxx $ Investment Grade Corporate Bond Fund,22.4,28883.7,,89.8,False,False,True,True,True,True,False,False
-PGX,Invesco Exchange-Traded Fund Trust II: Invesco Preferred ETF,16.9,3765.3,,67.7,False,False,True,True,True,True,False,False
-QQQ,"PowerShares QQQ Trust, Series 1",25.0,372507.3,,74.7,False,False,True,True,True,True,False,False
-RSP,Guggenheim Investments Rydex S&P 500 Equal Weight ETF,21.7,85196.3,,86.8,False,False,True,True,True,True,False,False
-SCHB,Schwab Strategic Trust: Schwab US Broad Market ETF,15.2,36927.3,,60.7,False,False,True,True,True,True,False,False
-SCHD,Schwab Strategic Trust: Schwab US Dividend Equity ETF,13.2,84820.0,,52.8,False,False,True,True,True,True,False,False
-SCHF,Schwab Strategic Trust: Schwab International Equity ETF,15.2,56551.8,,60.7,False,False,True,True,True,True,False,False
-SCHI,Schwab Strategic Trust: Schwab 5-10 Year Corporate Bond ETF,5.2,10288.2,,20.9,False,False,True,True,True,True,False,False
-SCHX,Schwab Strategic Trust: Schwab US Large-Cap ETF,15.2,61436.9,,60.7,False,False,True,True,True,True,False,False
-SPY,SPDR S&P 500 ETF Trust,25.0,651588.3,,100.0,False,False,True,True,True,True,True,True
-VEA,Vanguard Tax-Managed Funds: Vanguard Tax-Managed International Fund; Vanguard Europe Pacific ETF Shares,17.4,204774.9,,69.8,False,False,True,True,True,True,False,False
-VOO,Vanguard Index Funds: Vanguard 500 Index Fund; ETF Shares,14.3,817465.8,,57.3,False,False,True,True,True,True,False,False
-VTI,Vanguard Index Funds: Vanguard Total Stock Market Index Fund; ETF Shares,23.6,560750.5,,94.4,False,False,True,True,True,True,False,False
-VWO,Vanguard International Equity Index Funds: Emerging Markets Stock Index Fund; ETF Shares,19.8,108891.1,,79.3,False,False,True,True,True,True,False,False
-XLE,Select Sector SPDR Trust: Energy Select Sector SPDR Fund,25.0,43603.1,,100.0,False,False,True,True,True,True,True,True
-XLF,Select Sector SPDR Trust: Financial Select Sector SPDR Fund,25.0,47790.9,,100.0,False,False,True,True,True,True,True,True
-XLK,Select Sector SPDR Trust: Technology Select Sector SPDR Fund,25.0,84198.4,,100.0,False,False,True,True,True,True,True,True
+AGG,iShares Trust: iShares Lehman US Aggregate Bond Fund,10.0,138698.2,,100.0,False,False,True,True,True,True,True,True
+BKLN,PowerShares Exchange-Traded Fund Trust II: PowerShares Senior Loan Portfolio,10.0,6260.3,,100.0,False,False,True,True,True,True,True,True
+BND,Vanguard Bond Index Funds: Vanguard Total Bond Market Index Fund; ETF Shares,10.0,151563.1,,100.0,False,False,True,True,True,True,True,True
+EFA,iShares Trust: iShares MSCI EAFE Index Fund,10.0,71451.2,,100.0,False,False,True,True,True,True,True,True
+EMLC,Market Vectors ETF Trust: Market Vectors Emerging Markets Local Currency Bond ETF,10.0,4748.5,,100.0,False,False,True,True,True,True,True,True
+GLD,SPDR Gold Trust: SPDR Gold Shares,10.0,155110.8,,100.0,False,False,True,True,True,True,True,True
+IVV,iShares Trust: iShares Core S&P 500 ETF,10.0,720543.4,,100.0,False,False,True,True,True,True,True,True
+IWM,iShares Trust: iShares Russell 2000 Index Fund,10.0,71915.6,,100.0,False,False,True,True,True,True,True,True
+LQD,iShares Trust: iShares iBoxx $ Investment Grade Corporate Bond ETF,10.0,28883.7,,100.0,False,False,True,True,True,True,True,True
+PGX,PowerShares Exchange-Traded Fund Trust II: PowerShares Preferred Portfolio,10.0,3765.3,,100.0,False,False,True,True,True,True,True,True
+QQQ,"PowerShares QQQ Trust, Series 1",10.0,372507.3,,100.0,False,False,True,True,True,True,True,True
+RSP,PowerShares Exchange-Traded Fund Trust: PowerShares S&P 500 Equal Weight Portfolio,10.0,85196.3,,100.0,False,False,True,True,True,True,True,True
+SCHB,Schwab Strategic Trust: Schwab US Broad Market ETF,10.0,36927.3,,100.0,False,False,True,True,True,True,True,True
+SCHD,Schwab Strategic Trust: Schwab US Dividend Equity ETF,10.0,84820.0,,100.0,False,False,True,True,True,True,True,True
+SCHF,Schwab Strategic Trust: Schwab International Equity ETF,10.0,56551.8,,100.0,False,False,True,True,True,True,True,True
+SCHI,Schwab Strategic Trust: Schwab 5-10 Year Corporate Bond ETF,5.2,10288.2,,52.3,False,False,True,True,True,True,False,False
+SCHX,Schwab Strategic Trust: Schwab US Large-Cap ETF,10.0,61436.9,,100.0,False,False,True,True,True,True,True,True
+SPY,SPDR S&P 500 ETF Trust,10.0,651588.3,,100.0,False,False,True,True,True,True,True,True
+VEA,Vanguard Tax-Managed Funds: Vanguard Tax-Managed International Fund; Vanguard Europe Pacific ETF Shares,10.0,204774.9,,100.0,False,False,True,True,True,True,True,True
+VOO,Vanguard Index Funds: Vanguard 500 Index Fund; ETF Shares,10.0,817465.8,,100.0,False,False,True,True,True,True,True,True
+VTI,Vanguard Index Funds: Vanguard Total Stock Market Index Fund; ETF Class Shares,10.0,560750.5,,100.0,False,False,True,True,True,True,True,True
+VWO,Vanguard International Equity Index Funds: Vanguard Emerging Markets Stock Index Fund; ETF Shares,10.0,108891.1,,100.0,False,False,True,True,True,True,True,True
+XLE,Select Sector SPDR Trust: Energy Select Sector SPDR Fund,10.0,43603.1,,100.0,False,False,True,True,True,True,True,True
+XLF,Select Sector SPDR Trust: Financial Select Sector SPDR Fund,10.0,47790.9,,100.0,False,False,True,True,True,True,True,True
+XLK,Select Sector SPDR Trust: Technology Select Sector SPDR Fund,10.0,84198.4,,100.0,False,False,True,True,True,True,True,True

@@ -18,14 +18,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ---------------------------------------------------------------------------
-# ETF UNIVERSE DEFINITION
+# 1. ETF UNIVERSE DEFINITION
 # ---------------------------------------------------------------------------
 ETF_UNIVERSE = {
     "BlackRock (iShares)": [
         "IVV",   # iShares Core S&P 500 ETF
         "AGG",   # iShares Core U.S. Aggregate Bond ETF
         "EFA",   # iShares MSCI EAFE ETF
-        "IWM",   # iShares Russell 2000 ETF
+        "IWM",   # iShares Russell 2015 ETF
         "LQD",   # iShares iBoxx $ Investment Grade Corporate Bond ETF
     ],
     "Vanguard": [
@@ -62,7 +62,7 @@ ETF_UNIVERSE = {
 ALL_TICKERS = [ticker for tickers in ETF_UNIVERSE.values() for ticker in tickers]
  
 # ---------------------------------------------------------------------------
-# 3. WRDS CONNECTION & DATA PULL
+# 2. WRDS CONNECTION & DATA PULL
 # ---------------------------------------------------------------------------
 def connect_wrds(username: str = None) -> wrds.Connection:
     """
@@ -74,7 +74,7 @@ def connect_wrds(username: str = None) -> wrds.Connection:
     print("Connected successfully.\n")
     return db
 
-def fetch_crsp_etf_data(db: wrds.Connection, tickers: list, start_date: str = '2000-01-01', end_date: str = None) -> pd.DataFrame:
+def fetch_crsp_etf_data(db: wrds.Connection, tickers: list, start_date: str = '2015-01-01', end_date: str = None) -> pd.DataFrame:
     if end_date is None:
         end_date = datetime.today().strftime("%Y-%m-%d")
 
@@ -154,66 +154,38 @@ def fetch_etf_characteristics(db: wrds.Connection, tickers: list) -> pd.DataFram
         print("  Falling back to yfinance for metadata.\n")
         return pd.DataFrame()
     
-# ---------------------------------------------------------------------------
-# 3. YFINANCE FALLBACK /  SUPPLEMENTAL DATA
-# ---------------------------------------------------------------------------
-def fetch_yfinance_data(tickers: list, 
-                        start_date: str = "2000-01-01",
-                        end_date: str = None) -> pd.DataFrame:
+
+def fetch_avg_volume(db: wrds.Connection, tickers: list,
+                     lookback_days: int = 252) -> pd.DataFrame:
     """
-    Fetch adjusted close prices from Yahoo Finance as fallback or supplement.
-    Returns a wide DataFrame: index=date, columns=tickers.
+    Compute average daily share and dollar volume from crsp.dsf directly.
+    Used for liquidity filter in validate_universe().
     """
-    if end_date is None:
-        end_date = datetime.today().strftime("%Y-%m-%d")
- 
-    print(f"Fetching Yahoo Finance data for {len(tickers)} tickers...")
-    raw = yf.download(tickers, start=start_date, end=end_date, 
-                      auto_adjust=True, progress=False)
- 
-    # Extract Close prices (adjusted via auto_adjust=True)
-    if isinstance(raw.columns, pd.MultiIndex):
-        prices = raw["Close"]
-    else:
-        prices = raw[["Close"]].rename(columns={"Close": tickers[0]})
- 
-    print(f"  → Shape: {prices.shape} (dates × tickers)\n")
-    return prices
- 
- 
-def fetch_yfinance_metadata(tickers: list) -> pd.DataFrame:
+    ticker_array = "{" + ",".join(tickers) + "}"
+    cutoff_date  = (datetime.today() - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
+
+    query = f"""
+        SELECT
+            n.ticker,
+            AVG(d.vol)               AS avg_daily_volume,
+            AVG(ABS(d.prc) * d.vol)  AS avg_dollar_volume
+        FROM crsp.dsf AS d
+        JOIN crsp.dsenames AS n
+            ON d.permno = n.permno
+            AND d.date BETWEEN n.namedt AND COALESCE(n.nameendt, CURRENT_DATE)
+        WHERE n.ticker = ANY('{ticker_array}'::text[])
+          AND n.shrcd IN (73)
+          AND d.date >= '{cutoff_date}'
+        GROUP BY n.ticker
+        ORDER BY n.ticker
     """
-    Pull key ETF metadata from yfinance: AUM, expense ratio, category, 
-    avg volume, inception date. Used for universe validation.
-    """
-    records = []
-    print("Fetching ETF metadata from Yahoo Finance...")
- 
-    for ticker in tickers:
-        try:
-            info = yf.Ticker(ticker).info
-            records.append({
-                "ticker":          ticker,
-                "long_name":       info.get("longName", ""),
-                "category":        info.get("category", ""),
-                "fund_family":     info.get("fundFamily", ""),
-                "expense_ratio":   info.get("annualReportExpenseRatio", None),
-                "aum_millions":    round(info.get("totalAssets", 0) / 1e6, 1),
-                "avg_volume":      info.get("averageVolume", None),
-                "avg_volume_10d":  info.get("averageVolume10days", None),
-                "currency":        info.get("currency", ""),
-                "exchange":        info.get("exchange", ""),
-                "is_etn":          info.get("isEtn", False),
-            })
-        except Exception as e:
-            print(f"  Warning: Could not fetch info for {ticker}: {e}")
- 
-    df = pd.DataFrame(records)
-    print(f"  → Metadata retrieved for {len(df)} tickers.\n")
+
+    df = db.raw_sql(query)
+    print(f"  → Avg volume computed for {len(df)} ETFs over last {lookback_days} trading days.\n")
     return df
 
 # ---------------------------------------------------------------------------
-# 4. UNVERSE VALIDATION & LIQUDITY FILTERS
+# 3. UNVERSE VALIDATION & LIQUDITY FILTERS
 # ---------------------------------------------------------------------------
 def validate_universe(prices: pd.DataFrame,
                        metadata: pd.DataFrame,
@@ -306,7 +278,7 @@ def validate_universe(prices: pd.DataFrame,
     return validation_df
 
 # ---------------------------------------------------------------------------
-# 5. RETURN COMPUTATION
+# 4. RETURN COMPUTATION
 # ---------------------------------------------------------------------------
 def compute_returns(prices: pd.DataFrame, 
                     valid_tickers: list) -> pd.DataFrame:
@@ -329,11 +301,11 @@ def compute_returns(prices: pd.DataFrame,
     return simple_returns, log_returns
 
 # ---------------------------------------------------------------------------
-# 6. MAIN PIPELINE
+# 5. MAIN PIPELINE
 # ---------------------------------------------------------------------------
 def main(wrds_username: str = None,
          use_wrds: bool = True,
-         start_date: str = "2000-01-01"):
+         start_date: str = "2015-01-01"):
     """
     Main pipeline: connect → fetch prices → fetch metadata → validate → compute returns.
 
@@ -342,8 +314,7 @@ def main(wrds_username: str = None,
     wrds_username : str
         Your WRDS username. Leave None for interactive prompt.
     use_wrds : bool
-        If True, attempt WRDS connection first; falls back to yfinance.
-        If False, use yfinance only (useful for testing without WRDS access).
+        If True, attempt WRDS connection. No yfinance fallback.
     start_date : str
         Start date for historical data pull (YYYY-MM-DD).
 
@@ -353,7 +324,7 @@ def main(wrds_username: str = None,
     simple_returns  : pd.DataFrame  — daily simple returns (validated ETFs)
     log_returns     : pd.DataFrame  — daily log returns (validated ETFs)
     validation      : pd.DataFrame  — universe validation results
-    metadata        : pd.DataFrame  — ETF metadata (WRDS or yfinance)
+    metadata        : pd.DataFrame  — ETF metadata from WRDS
     """
     end_date = datetime.today().strftime("%Y-%m-%d")
 
@@ -366,83 +337,70 @@ def main(wrds_username: str = None,
         print(f"  {manager}: {', '.join(tickers)}")
     print()
 
-    # ── Step 1: Fetch price data ──────────────────────────────
-    prices      = None
-    db          = None
-    crsp_df     = None
-
-    if use_wrds:
-        try:
-            db = connect_wrds(wrds_username)
-            crsp_df = fetch_crsp_etf_data(db, ALL_TICKERS, start_date, end_date)
-
-            if crsp_df is not None and not crsp_df.empty:
-                # Reconstruct adjusted price: abs(prc) / cum_factor_price
-                prices = (
-                    crsp_df
-                    .assign(adj_price=lambda x: x["price"].abs() / x["cum_factor_price"])
-                    .pivot_table(index="date", columns="ticker", values="adj_price")
-                )
-                print(f"  → Price matrix: {prices.shape[0]} dates × {prices.shape[1]} tickers\n")
-            else:
-                print("  Warning: CRSP returned empty data, falling back to yfinance for prices.\n")
-
-        except Exception as e:
-            print(f"  WRDS price fetch failed: {e}")
-            print("  Falling back to yfinance for prices.\n")
-
-    if prices is None:
-        prices = fetch_yfinance_data(ALL_TICKERS, start_date, end_date)
-
-    # ── Step 2: Fetch metadata ────────────────────────────────
+    # ── Steps 1 & 2: Fetch all data from WRDS ────────────────
+    prices   = None
     metadata = None
+    db       = None
 
-    if use_wrds and db is not None:
-        try:
-            characteristics = fetch_etf_characteristics(db, ALL_TICKERS)
+    try:
+        db = connect_wrds(wrds_username)
 
-            if not characteristics.empty:
-                # Rename WRDS columns to match validate_universe() expectations
-                metadata = characteristics.rename(columns={
-                    "tna_latest": "aum_millions",
-                    "fund_name":  "long_name",
-                }).copy()
-                # fund_summary has no volume data — set to None (filter will be skipped)
-                metadata["avg_volume"] = None
-                print("  Using WRDS metadata, skipping yfinance.\n")
+        # ── Step 1: Prices ────────────────────────────────────
+        crsp_df = fetch_crsp_etf_data(db, ALL_TICKERS, start_date, end_date)
 
-        except Exception as e:
-            print(f"  WRDS metadata fetch failed: {e}\n")
+        if crsp_df is None or crsp_df.empty:
+            raise RuntimeError("CRSP returned empty price data.")
 
-    if metadata is None:
-        print("  WRDS metadata unavailable, falling back to yfinance...")
-        metadata = fetch_yfinance_metadata(ALL_TICKERS)
+        prices = (
+            crsp_df
+            .assign(adj_price=lambda x: x["price"].abs() / x["cum_factor_price"])
+            .pivot_table(index="date", columns="ticker", values="adj_price")
+        )
+        print(f"  → Price matrix: {prices.shape[0]} dates × {prices.shape[1]} tickers\n")
 
-    # ── Step 3: Close WRDS connection ────────────────────────
-    if db is not None:
-        db.close()
-        print("  WRDS connection closed.\n")
+        # ── Step 2: Metadata ──────────────────────────────────
+        characteristics = fetch_etf_characteristics(db, ALL_TICKERS)
+        avg_volume      = fetch_avg_volume(db, ALL_TICKERS)
+
+        if characteristics.empty:
+            raise RuntimeError("CRSP returned empty ETF characteristics.")
+
+        metadata = (
+            characteristics
+            .rename(columns={"tna_latest": "aum_millions", "fund_name": "long_name"})
+            .merge(avg_volume, on="ticker", how="left")
+        )
+
+    except Exception as e:
+        raise RuntimeError(f"WRDS fetch failed: {e}")
+
+    finally:
+        # ── Step 3: Always close WRDS connection ──────────────
+        if db is not None:
+            db.close()
+            print("  WRDS connection closed.\n")
 
     # ── Step 4: Validate universe ─────────────────────────────
-    validation = validate_universe(prices, metadata)
-
+    validation    = validate_universe(prices, metadata)
     valid_tickers = validation[validation["PASSES_ALL"]]["ticker"].tolist()
+
+    if not valid_tickers:
+        raise ValueError("No ETFs passed validation filters. Check your filter thresholds.")
 
     print("\nValidated ETF Universe:")
     display_cols = ["ticker", "long_name", "history_years", "aum_millions",
                     "avg_daily_volume", "PASSES_ALL"]
-    # Only show columns that exist (avg_volume may be None if from WRDS)
     display_cols = [c for c in display_cols if c in validation.columns]
     print(validation[display_cols].to_string(index=False))
-
-    if not valid_tickers:
-        raise ValueError("No ETFs passed validation filters. Check your filter thresholds.")
 
     # ── Step 5: Compute returns ───────────────────────────────
     print()
     simple_returns, log_returns = compute_returns(prices, valid_tickers)
 
     # ── Step 6: Save outputs ──────────────────────────────────
+    import os
+    os.makedirs("data", exist_ok=True)
+
     prices[valid_tickers].to_csv("data/etf_prices.csv")
     simple_returns.to_csv("data/etf_simple_returns.csv")
     log_returns.to_csv("data/etf_log_returns.csv")
@@ -450,11 +408,11 @@ def main(wrds_username: str = None,
     metadata.to_csv("data/etf_metadata.csv", index=False)
 
     print("\nOutputs saved:")
-    print("  etf_prices.csv")
-    print("  etf_simple_returns.csv")
-    print("  etf_log_returns.csv")
-    print("  etf_validation.csv")
-    print("  etf_metadata.csv")
+    print("  data/etf_prices.csv")
+    print("  data/etf_simple_returns.csv")
+    print("  data/etf_log_returns.csv")
+    print("  data/etf_validation.csv")
+    print("  data/etf_metadata.csv")
 
     print(f"\n✓ Universe construction complete.")
     print(f"  Final universe: {len(valid_tickers)} ETFs → {valid_tickers}")
@@ -466,7 +424,7 @@ def main(wrds_username: str = None,
 if __name__ == "__main__":
     WRDS_USERNAME = "ngchunyue"        # e.g. "jsmith"
     USE_WRDS      = True
-    START_DATE    = "2000-01-01"
+    START_DATE    = "2015-01-01"
 
     prices, simple_returns, log_returns, validation, metadata = main(
         wrds_username=WRDS_USERNAME,
